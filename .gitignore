@@ -1,1 +1,3 @@
 private-notes.yml
+vendor/*
+composer.lock
