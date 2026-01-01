@@ -47,7 +47,7 @@ try {
     <div class="row">
         <!-- Row 1 -->
         <div class="col">
-            <h1>Player: Gink</h1>
+            <h1>Player: <span id="player-name">Gink</span></h1>
             <img src="assets/characters/gink/gink.png" height="100px"/>
         </div>
 
