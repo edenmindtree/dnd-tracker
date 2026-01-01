@@ -29,6 +29,7 @@ function getHighestListNumber(listQuery) {
     const max = Math.max(...currentNumbers);
     return max+1;
 }
+
 // Submit New Generic Item
 function submitNewItem(itemType, itemMax, overlay) {
   const nameValue = document.getElementById(`new-${itemType}`).value;
@@ -111,7 +112,7 @@ function buildSaveObject() {
 
 // Starter function to load with page
 setTotalLevel();
-console.log(buildSaveObject());
+
 
 // NEW CLASS
 // Get Constant elements
