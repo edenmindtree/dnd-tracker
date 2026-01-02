@@ -21,8 +21,9 @@ try {
     $collection = $database->selectCollection('player_data');
     
     // Query data - get all data for this specific player
-    $player_data = $collection->findOne(['player_name' => $player_name]);
-
+    if (isset($player_name)) {
+        $player_data = $collection->findOne(['player_name' => $player_name]);
+    }
     // Query data - get all unique player names
     $options = [
         'projection' => [
@@ -44,7 +45,7 @@ try {
     <title>DnD Tracker</title>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/bs.css" >
 
     <!-- Custom CSS stylesheet -->
     <link rel="stylesheet" href="css/style.css">
@@ -232,11 +233,11 @@ try {
         </div>
     </div>
 
-    <!-- load popup -->
+    <!-- load popup needs to be outside the container divs above-->
     <div id="popup-new-load-overlay" class="overlay">
         <div id="popup-new-load-form" class="popup">
             <h2>Load Player Data</h2>
-            <p>This will load the last saved player's state.</p>
+            <p>This will load the last saved player's data.</p>
             <form id="new-load-form">
                 <label for="player_choice">Choose a player:</label>
                 <select id="player_choice" name="player_choice">
@@ -254,7 +255,7 @@ try {
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="js/bs.js"></script>
 
     <!-- Custom JavaScript for in-page actions-->
     <script src="js/main.js"></script>
@@ -262,6 +263,7 @@ try {
     <!-- Custom Javascript for loading and saving -->
     <script src="js/load_save.js"></script>
 
+    <!-- SVG Sprites -->
     <svg width="0" height="0" style="display: none">
         <svg id="trash-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
         <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
