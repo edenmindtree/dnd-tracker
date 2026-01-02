@@ -1,19 +1,31 @@
 <?php
-// Include connection details from outside the project
-require_once '/home/eden/scripts/dnd_tracker_php_conn.php';
 
-// Include the Composer autoloader
-require_once __DIR__ . '/vendor/autoload.php';
+if (isset($_POST['player_name'])) {
+    // POST was submitted with player_name
+    $player_name = $_POST['player_name'];
+} else {
+    // Default player_name (when there is no POST)
+    $player_name = "Gink";
+}
+$player_name_lower = strtolower($player_name);
 
 try {
+    // Include connection details from outside the project
+    require_once '/home/eden/scripts/dnd_tracker_php_conn.php';
+
+    // Include the Composer autoloader
+    require_once __DIR__ . '/vendor/autoload.php';
+
     // Connect to MongoDB
     $client = new MongoDB\Client("mongodb://{$username}:{$password}@{$servername}?authSource=admin");
     
     // Select a database and collection
     $database = $client->selectDatabase($dbname);
-    $collection = $database->selectCollection('default');
+    $collection = $database->selectCollection('player_data');
     
-    // echo "Connection to MongoDB successful!";
+    $player_data = $collection->findOne(['player_name' => $player_name]);
+    // echo json_encode($document), PHP_EOL;
+    // echo "<br>Name: {$document['player_name']}";
     
 } catch (MongoDB\Driver\Exception\Exception $e) {
     echo "Fatal Error: " . $e->getMessage() . PHP_EOL;
@@ -44,11 +56,11 @@ try {
     <div class="container">
     <div class="row">
         <!-- Row 1 -->
-        
+
         <!-- Player -->
         <div class="col">
-            <h1>Player: <span id="player-name">Gink</span></h1>
-            <img src="assets/characters/gink/gink.png" height="100px"/>
+            <h1>Player: <span id="player-name"><?php echo "{$player_name}" ?></span></h1>
+            <img src="assets/characters/<?php echo "{$player_name_lower}" ?>/<?php echo "{$player_name_lower}" ?>.png" height="100px"/>
             <svg class="load-save-icon" id="open-load-popup-btn"><use xlink:href="#load-icon"></use></svg>
             <svg class="load-save-icon" id="open-save-popup-btn"><use xlink:href="#save-icon"></use></svg>
         </div>
@@ -104,9 +116,11 @@ try {
         <div class="col">
             <h1>Class: <span class="add-button" id="open-new-class-popup-btn">+</span></h1>
             <ul id="class-list">
-                <li><input type="number" class="class-input" id="class-0" name="class-0" min="0" max="20" step="1" oninput="setTotalLevel()" value="2"> Rogue <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" class="class-input" id="class-1" name="class-1" min="0" max="20" step="1" oninput="setTotalLevel()" value="6"> Ranger <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" class="class-input" id="class-2" name="class-2" min="0" max="20" step="1" oninput="setTotalLevel()" value="2"> Fighter <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
+                <?php
+                foreach ($player_data["class"] as $key => $value) {
+                    echo "<li><input type='number' class='class-input' id='class-{$key}' name='class-{$key}' min='0' max='20' step='1' oninput='setTotalLevel()' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                }
+                ?>
             </ul>
         </div>
 
@@ -136,12 +150,11 @@ try {
         <div class="col">
             <h1>Abilities: <span class="add-button" id="open-new-ability-popup-btn">+</span></h1>
             <ul id="ability-list">
-                <li><input type="number" id="ability-0" name="ability-0" min="0" max="999" step="1" value="3"> Luck Points <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="ability-1" name="ability-1" min="0" max="999" step="1" value="3"> Favored Foe <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="ability-2" name="ability-2" min="0" max="999" step="1" value="1"> Second Wind <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="ability-3" name="ability-3" min="0" max="999" step="1" value="1"> Action Surge <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="ability-4" name="ability-4" min="0" max="999" step="1" value="1"> Soul of the Fallen <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="ability-5" name="ability-5" min="0" max="999" step="1" value="1"> Marked by the Shard <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
+                <?php
+                foreach ($player_data["abilities"] as $key => $value) {
+                    echo "<li><input type='number' id='ability-{$key}' name='ability-{$key}' min='0' max='999' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                }
+                ?>
             </ul>
         </div>
 
@@ -166,13 +179,11 @@ try {
         <div class="col">
             <h1>Items: <span class="add-button" id="open-new-item-popup-btn">+</span></h1>
             <ul id="item-list">
-                <li><input type="number" id="item-0" name="item-0" min="0" max="9999" step="1" value="25"> Arrows <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="item-1" name="item-1" min="0" max="9999" step="1" value="45"> Bolts <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="item-2" name="item-2" min="0" max="9999" step="1" value="5"> +2 Bolt <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="item-3" name="item-3" min="0" max="9999" step="1" value="1"> Lvl 1 Cure Wounds <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="item-4" name="item-4" min="0" max="9999" step="1" value="2"> Healing Potion <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="item-5" name="item-5" min="0" max="9999" step="1" value="2"> Greater Healing Potion <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="item-6" name="item-6" min="0" max="9999" step="1" value="1"> lvl 6 Spell Slot Potion <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
+                <?php
+                foreach ($player_data["items"] as $key => $value) {
+                    echo "<li><input type='number' id='item-{$key}' name='item-{$key}' min='0' max='9999' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                }
+                ?>
             </ul>
         </div>
 
@@ -197,8 +208,11 @@ try {
         <div class="col">
             <h1>Spells: <span class="add-button" id="open-new-spell-popup-btn">+</span></h1>
             <ul id="spell-list">
-                <li><input type="number" id="spell-0" name="spell-0" min="0" max="20" step="1" value="4"> Level 1 <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
-                <li><input type="number" id="spell-1" name="spell-1" min="0" max="20" step="1" value="2"> Level 2 <svg class="trash-icon" onclick="removeItem(this)"><use xlink:href="#trash-icon"></use></svg></li>
+                <?php
+                foreach ($player_data["spells"] as $key => $value) {
+                    echo "<li><input type='number' id='item-{$key}' name='item-{$key}' min='0' max='20' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                }
+                ?>
             </ul>
         </div>
 
