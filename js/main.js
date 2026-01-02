@@ -82,37 +82,8 @@ function getListData(listId) {
     return listData
 }
 
-function buildSaveObject() {
-    let saveObject = {
-        "player_name": "",
-        "level": "",
-        "class": [],
-        "abilities": [],
-        "items": [],
-        "spells": [],
-        "time_saved": ""
-    };
-    // Set Name
-    saveObject.player_name = document.getElementById("player-name").textContent;
-    // Set Level
-    saveObject.level = document.getElementById("total-level").textContent;
-    // Set class
-    saveObject.class = getListData("class-list");
-    // Set abilities
-    saveObject.abilities = getListData("ability-list");
-    // Set items
-    saveObject.items = getListData("item-list");
-    // Set spells
-    saveObject.spells = getListData("spell-list");
-    // Set time_saved
-    saveObject.time_saved = new Date().toISOString();
-    
-    return saveObject;
-}
-
 // Starter function to load with page
 setTotalLevel();
-
 
 // NEW CLASS
 // Get Constant elements

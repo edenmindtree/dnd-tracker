@@ -1,13 +1,10 @@
 <?php
 
-if (isset($_POST['player_name'])) {
+if (isset($_POST['player_choice'])) {
     // POST was submitted with player_name
-    $player_name = $_POST['player_name'];
-} else {
-    // Default player_name (when there is no POST)
-    $player_name = "Gink";
+    $player_name = $_POST['player_choice'];
+    $player_name_lower = strtolower($player_name);
 }
-$player_name_lower = strtolower($player_name);
 
 try {
     // Include connection details from outside the project
@@ -23,9 +20,16 @@ try {
     $database = $client->selectDatabase($dbname);
     $collection = $database->selectCollection('player_data');
     
+    // Query data - get all data for this specific player
     $player_data = $collection->findOne(['player_name' => $player_name]);
-    // echo json_encode($document), PHP_EOL;
-    // echo "<br>Name: {$document['player_name']}";
+
+    // Query data - get all unique player names
+    $options = [
+        'projection' => [
+            'player_name' => 1
+        ],
+    ];
+    $all_players = $collection->find([], $options);
     
 } catch (MongoDB\Driver\Exception\Exception $e) {
     echo "Fatal Error: " . $e->getMessage() . PHP_EOL;
@@ -47,193 +51,206 @@ try {
 
 </head>
 <body>
-
-
     <div class="banner container">
         <img src="assets/global/banner.png" height="100px"/>
     </div>
 
-    <div class="container">
-    <div class="row">
-        <!-- Row 1 -->
-
-        <!-- Player -->
-        <div class="col">
-            <h1>Player: <span id="player-name"><?php echo "{$player_name}" ?></span></h1>
-            <img src="assets/characters/<?php echo "{$player_name_lower}" ?>/<?php echo "{$player_name_lower}" ?>.png" height="100px"/>
-            <svg class="load-save-icon" id="open-load-popup-btn"><use xlink:href="#load-icon"></use></svg>
-            <svg class="load-save-icon" id="open-save-popup-btn"><use xlink:href="#save-icon"></use></svg>
-        </div>
-
-        <!-- load popup -->
-        <div id="popup-new-load-overlay" class="overlay">
-            <div id="popup-new-load-form" class="popup">
-                <h2>Load Data</h2>
-                <p>This will load the last saved player's state.</p>
-                <form id="new-load-form">
-                    <button type="submit">Load</button>
-                </form>
-                <button id="close-new-load-popup">Close</button>
-            </div>
-        </div>
-
-        <!-- save popup -->
-        <div id="popup-new-save-overlay" class="overlay">
-            <div id="popup-new-save-form" class="popup">
-                <h2>Save Data</h2>
-                <p>This will save the current player's state.</p>
-                <form id="new-save-form">
-                    <button type="submit">Save</button>
-                </form>
-                <button id="close-new-save-popup">Close</button>
-            </div>
-        </div>
-
-        <!-- save success toast -->
-        <div id="saveSuccessToast" class="toast align-items-center text-bg-success border-0 position-fixed top-0 end-0 p-3" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-            Data has been successfully saved.
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        </div>
-
-        <!-- save error toast -->
-        <div id="saveErrorToast" class="toast align-items-center text-bg-danger border-0 position-fixed top-0 end-0 p-3" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-            There was an error saving the data.
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        </div>
-
-        <!-- Level -->
-        <div class="col"><h1>Level: <span id="total-level"></span></h1></div>
-
-        <!-- Classes -->
-        <div class="col">
-            <h1>Class: <span class="add-button" id="open-new-class-popup-btn">+</span></h1>
-            <ul id="class-list">
-                <?php
-                foreach ($player_data["class"] as $key => $value) {
-                    echo "<li><input type='number' class='class-input' id='class-{$key}' name='class-{$key}' min='0' max='20' step='1' oninput='setTotalLevel()' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
-                }
-                ?>
-            </ul>
-        </div>
-
-        <!-- class popup -->
-        <div id="popup-new-class-overlay" class="overlay">
-            <div id="popup-new-class-form" class="popup">
-                <h2>Add Class</h2>
-                <form id="new-class-form">
-                    <label for="new-class">Class:</label>
-                    <input type="text" id="new-class" name="new-class" required>
-                    </br>
-                    <label for="new-class-lvl">Level:</label>
-                    <input type="number" id="new-class-lvl" name="new-class-lvl" required>
-                    </br>
-                    <button type="submit">Submit</button>
-                </form>
-                <button id="close-new-class-popup">Close</button>
-            </div>
-        </div>
-
-
-
-        <div class="w-100"></div>
-
-        <!-- Row 2 -->
-        <!-- Abilities -->
-        <div class="col">
-            <h1>Abilities: <span class="add-button" id="open-new-ability-popup-btn">+</span></h1>
-            <ul id="ability-list">
-                <?php
-                foreach ($player_data["abilities"] as $key => $value) {
-                    echo "<li><input type='number' id='ability-{$key}' name='ability-{$key}' min='0' max='999' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
-                }
-                ?>
-            </ul>
-        </div>
-
-        <!-- ability popup -->
-        <div id="popup-new-ability-overlay" class="overlay">
-            <div id="popup-new-ability-form" class="popup">
-                <h2>Add Ability</h2>
-                <form id="new-ability-form">
-                    <label for="new-ability">Ability:</label>
-                    <input type="text" id="new-ability" name="new-ability" required>
-                    </br>
-                    <label for="new-ability-quan">Charges:</label>
-                    <input type="number" id="new-ability-quan" name="new-ability-quan" required>
-                    </br>
-                    <button type="submit">Submit</button>
-                </form>
-                <button id="close-new-ability-popup">Close</button>
-            </div>
-        </div>
-
-        <!-- Items -->
-        <div class="col">
-            <h1>Items: <span class="add-button" id="open-new-item-popup-btn">+</span></h1>
-            <ul id="item-list">
-                <?php
-                foreach ($player_data["items"] as $key => $value) {
-                    echo "<li><input type='number' id='item-{$key}' name='item-{$key}' min='0' max='9999' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
-                }
-                ?>
-            </ul>
-        </div>
-
-        <!-- item popup -->
-        <div id="popup-new-item-overlay" class="overlay">
-            <div id="popup-new-item-form" class="popup">
-                <h2>Add Item</h2>
-                <form id="new-item-form">
-                    <label for="new-item">Item:</label>
-                    <input type="text" id="new-item" name="new-item" required>
-                    </br>
-                    <label for="new-item-quan">Quantity:</label>
-                    <input type="number" id="new-item-quan" name="new-item-quan" required>
-                    </br>
-                    <button type="submit">Submit</button>
-                </form>
-                <button id="close-new-item-popup">Close</button>
-            </div>
-        </div>
-
-        <!-- Spells -->
-        <div class="col">
-            <h1>Spells: <span class="add-button" id="open-new-spell-popup-btn">+</span></h1>
-            <ul id="spell-list">
-                <?php
-                foreach ($player_data["spells"] as $key => $value) {
-                    echo "<li><input type='number' id='item-{$key}' name='item-{$key}' min='0' max='20' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
-                }
-                ?>
-            </ul>
-        </div>
-
-        <!-- spell popup -->
-        <div id="popup-new-spell-overlay" class="overlay">
-            <div id="popup-new-spell-form" class="popup">
-                <h2>Add spell</h2>
-                <form id="new-spell-form">
-                    <label for="new-spell">Spell Lvl/Class:</label>
-                    <input type="text" id="new-spell" name="new-spell" required>
-                    </br>
-                    <label for="new-spell-quan">Quantity:</label>
-                    <input type="number" id="new-spell-quan" name="new-spell-quan" required>
-                    </br>
-                    <button type="submit">Submit</button>
-                </form>
-                <button id="close-new-spell-popup">Close</button>
-            </div>
-        </div>
-
+    <div id="player-not-found-container" style="display: <?php echo (isset($player_data)) ? 'none' : 'block'; ?>;">
+        <h2>Select Player <svg class="load-save-icon" id="not-found-load-popup-btn"><use xlink:href="#load-icon"></use></svg></h2>
     </div>
+
+    <div id="player-found-container" style="display: <?php echo (isset($player_data)) ? 'block' : 'none'; ?>;">
+        <div class="container">
+        <div class="row">
+            <!-- Row 1 -->
+
+            <!-- Player -->
+            <div class="col">
+                <h1>Player: <span id="player-name"><?php echo "{$player_name}" ?></span></h1>
+                <img src="assets/characters/<?php echo "{$player_name_lower}" ?>.png" height="100px"/>
+                <svg class="load-save-icon" id="open-load-popup-btn"><use xlink:href="#load-icon"></use></svg>
+                <svg class="load-save-icon" id="open-save-popup-btn"><use xlink:href="#save-icon"></use></svg>
+            </div>
+
+            <!-- save popup -->
+            <div id="popup-new-save-overlay" class="overlay">
+                <div id="popup-new-save-form" class="popup">
+                    <h2>Save Player Data</h2>
+                    <p>This will save the current player's state.</p>
+                    <form id="new-save-form">
+                        <button type="submit">Save</button>
+                    </form>
+                    <button id="close-new-save-popup">Close</button>
+                </div>
+            </div>
+
+            <!-- save success toast -->
+            <div id="saveSuccessToast" class="toast align-items-center text-bg-success border-0 position-fixed top-0 end-0 p-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                Data has been successfully saved.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            </div>
+
+            <!-- save error toast -->
+            <div id="saveErrorToast" class="toast align-items-center text-bg-danger border-0 position-fixed top-0 end-0 p-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                There was an error saving the data.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            </div>
+
+            <!-- Level -->
+            <div class="col"><h1>Level: <span id="total-level"></span></h1></div>
+
+            <!-- Classes -->
+            <div class="col">
+                <h1>Class: <span class="add-button" id="open-new-class-popup-btn">+</span></h1>
+                <ul id="class-list">
+                    <?php
+                    foreach ($player_data["class"] as $key => $value) {
+                        echo "<li><input type='number' class='class-input' id='class-{$key}' name='class-{$key}' min='0' max='20' step='1' oninput='setTotalLevel()' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                    }
+                    ?>
+                </ul>
+            </div>
+
+            <!-- class popup -->
+            <div id="popup-new-class-overlay" class="overlay">
+                <div id="popup-new-class-form" class="popup">
+                    <h2>Add Class</h2>
+                    <form id="new-class-form">
+                        <label for="new-class">Class:</label>
+                        <input type="text" id="new-class" name="new-class" required>
+                        </br>
+                        <label for="new-class-lvl">Level:</label>
+                        <input type="number" id="new-class-lvl" name="new-class-lvl" required>
+                        </br>
+                        <button type="submit">Submit</button>
+                    </form>
+                    <button id="close-new-class-popup">Close</button>
+                </div>
+            </div>
+
+
+
+            <div class="w-100"></div>
+
+            <!-- Row 2 -->
+            <!-- Abilities -->
+            <div class="col">
+                <h1>Abilities: <span class="add-button" id="open-new-ability-popup-btn">+</span></h1>
+                <ul id="ability-list">
+                    <?php
+                    foreach ($player_data["abilities"] as $key => $value) {
+                        echo "<li><input type='number' id='ability-{$key}' name='ability-{$key}' min='0' max='999' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                    }
+                    ?>
+                </ul>
+            </div>
+
+            <!-- ability popup -->
+            <div id="popup-new-ability-overlay" class="overlay">
+                <div id="popup-new-ability-form" class="popup">
+                    <h2>Add Ability</h2>
+                    <form id="new-ability-form">
+                        <label for="new-ability">Ability:</label>
+                        <input type="text" id="new-ability" name="new-ability" required>
+                        </br>
+                        <label for="new-ability-quan">Charges:</label>
+                        <input type="number" id="new-ability-quan" name="new-ability-quan" required>
+                        </br>
+                        <button type="submit">Submit</button>
+                    </form>
+                    <button id="close-new-ability-popup">Close</button>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="col">
+                <h1>Items: <span class="add-button" id="open-new-item-popup-btn">+</span></h1>
+                <ul id="item-list">
+                    <?php
+                    foreach ($player_data["items"] as $key => $value) {
+                        echo "<li><input type='number' id='item-{$key}' name='item-{$key}' min='0' max='9999' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                    }
+                    ?>
+                </ul>
+            </div>
+
+            <!-- item popup -->
+            <div id="popup-new-item-overlay" class="overlay">
+                <div id="popup-new-item-form" class="popup">
+                    <h2>Add Item</h2>
+                    <form id="new-item-form">
+                        <label for="new-item">Item:</label>
+                        <input type="text" id="new-item" name="new-item" required>
+                        </br>
+                        <label for="new-item-quan">Quantity:</label>
+                        <input type="number" id="new-item-quan" name="new-item-quan" required>
+                        </br>
+                        <button type="submit">Submit</button>
+                    </form>
+                    <button id="close-new-item-popup">Close</button>
+                </div>
+            </div>
+
+            <!-- Spells -->
+            <div class="col">
+                <h1>Spells: <span class="add-button" id="open-new-spell-popup-btn">+</span></h1>
+                <ul id="spell-list">
+                    <?php
+                    foreach ($player_data["spells"] as $key => $value) {
+                        echo "<li><input type='number' id='item-{$key}' name='item-{$key}' min='0' max='20' step='1' value='{$value['quantity']}'> {$value['name']} <svg class='trash-icon' onclick='removeItem(this)'><use xlink:href='#trash-icon'></use></svg></li>";
+                    }
+                    ?>
+                </ul>
+            </div>
+
+            <!-- spell popup -->
+            <div id="popup-new-spell-overlay" class="overlay">
+                <div id="popup-new-spell-form" class="popup">
+                    <h2>Add spell</h2>
+                    <form id="new-spell-form">
+                        <label for="new-spell">Spell Lvl/Class:</label>
+                        <input type="text" id="new-spell" name="new-spell" required>
+                        </br>
+                        <label for="new-spell-quan">Quantity:</label>
+                        <input type="number" id="new-spell-quan" name="new-spell-quan" required>
+                        </br>
+                        <button type="submit">Submit</button>
+                    </form>
+                    <button id="close-new-spell-popup">Close</button>
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </div>
+
+    <!-- load popup -->
+    <div id="popup-new-load-overlay" class="overlay">
+        <div id="popup-new-load-form" class="popup">
+            <h2>Load Player Data</h2>
+            <p>This will load the last saved player's state.</p>
+            <form id="new-load-form">
+                <label for="player_choice">Choose a player:</label>
+                <select id="player_choice" name="player_choice">
+                    <?php
+                    foreach ($all_players as $player) {
+                        echo "<option value='{$player['player_name']}'>{$player['player_name']}</option>";
+                    }
+                    ?>
+                </select>
+                <br>
+                <button type="submit">Load</button>
+            </form>
+            <button id="close-new-load-popup">Close</button>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->

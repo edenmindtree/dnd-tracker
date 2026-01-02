@@ -1,36 +1,36 @@
+function buildSaveObject() {
+    let saveObject = {
+        "player_name": "",
+        "level": "",
+        "class": [],
+        "abilities": [],
+        "items": [],
+        "spells": [],
+        "time_saved": ""
+    };
+    // Set Name
+    saveObject.player_name = document.getElementById("player-name").textContent;
+    // Set Level
+    saveObject.level = document.getElementById("total-level").textContent;
+    // Set class
+    saveObject.class = getListData("class-list");
+    // Set abilities
+    saveObject.abilities = getListData("ability-list");
+    // Set items
+    saveObject.items = getListData("item-list");
+    // Set spells
+    saveObject.spells = getListData("spell-list");
+    // Set time_saved
+    saveObject.time_saved = new Date().toISOString();
+    
+    return saveObject;
+}
+
 function saveTheData() {
     const saveDataObject = buildSaveObject();
     // console.log(saveDataObject);
     return saveDataObject;
 }
-
-// LOAD ACTIONS
-// Get Constant elements
-const loadOpenBtn = document.getElementById("open-load-popup-btn");
-const loadCloseBtn = document.getElementById("close-new-load-popup");
-const loadOverlay = document.getElementById("popup-new-load-overlay");
-const loadForm = document.getElementById('new-load-form');
-
-// Event listeners for button clicks
-loadOpenBtn.addEventListener("click", () => {
-  openPopup(loadOverlay);
-});
-loadCloseBtn.addEventListener("click", () => {
-  closePopup(loadOverlay);
-});
-
-// Optional: Close the popup if the user clicks outside the form
-window.addEventListener("click", function(event) {
-  if (event.target === loadOverlay) {
-    closePopup(loadOverlay);
-  }
-});
-
-// Add Submit event listeners
-loadForm.addEventListener('submit', function (event) {
-    // 1. Prevent the form's default submission behavior (prevents the page reload/POST)
-    event.preventDefault();
-});
 
 // SAVE ACTIONS
 // Get Constant elements
@@ -57,11 +57,7 @@ window.addEventListener("click", function(event) {
 // Add Submit Save event listener
 saveForm.addEventListener('submit', function (event) {
     const dataToSave = saveTheData();
-    // const dataToSend = {
-    //     "save_data": dataToSave
-    // }
-    console.log(JSON.stringify(dataToSave) );
-    
+
     fetch('save.php', {
         method: 'POST',
         headers: {
@@ -70,7 +66,7 @@ saveForm.addEventListener('submit', function (event) {
         // Convert the save object to a JSON string
         body: JSON.stringify(dataToSave) 
     })
-    .then(response => response) // Or .json() if PHP returns JSON
+    .then(response => response)
     .then(data => {
         // Handle the response from the PHP page, check if OK (not 500)
         if (!data.ok) {
@@ -97,4 +93,40 @@ saveForm.addEventListener('submit', function (event) {
         const saveErrorToastBootstrap = bootstrap.Toast.getOrCreateInstance(saveErrorToast)
         saveErrorToastBootstrap.show()
     });
+});
+
+// LOAD ACTIONS
+// Get Constant elements
+const loadOpenBtn = document.getElementById("open-load-popup-btn");
+const loadCloseBtn = document.getElementById("close-new-load-popup");
+const loadOverlay = document.getElementById("popup-new-load-overlay");
+const loadForm = document.getElementById('new-load-form');
+const notFoundLoadOpenBtn = document.getElementById("not-found-load-popup-btn");
+
+// Event listeners for button clicks
+loadOpenBtn.addEventListener("click", () => {
+  openPopup(loadOverlay);
+});
+loadCloseBtn.addEventListener("click", () => {
+  closePopup(loadOverlay);
+});
+notFoundLoadOpenBtn.addEventListener("click", () => {
+  openPopup(loadOverlay);
+  console.log("notFoundLoadOpenBtn");
+});
+
+// Optional: Close the popup if the user clicks outside the form
+window.addEventListener("click", function(event) {
+  if (event.target === loadOverlay) {
+    closePopup(loadOverlay);
+  }
+});
+
+// Add Submit event listeners
+loadForm.addEventListener('submit', function (event) {
+    // 1. Prevent the form's default submission behavior (prevents the page reload/POST)
+    event.preventDefault();
+    loadForm.method = 'POST';
+    loadForm.action = 'index.php';
+    loadForm.submit();
 });
